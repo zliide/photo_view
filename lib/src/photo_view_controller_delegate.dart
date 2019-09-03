@@ -17,9 +17,10 @@ class PhotoViewControllerDelegate {
 
   final PhotoViewControllerBase controller;
   final PhotoViewScaleStateController scaleStateController;
-  final ScaleBoundaries scaleBoundaries;
   final ScaleStateCycle scaleStateCycle;
   final Alignment basePosition;
+
+  ScaleBoundaries scaleBoundaries;
 
   Function(double prevScale, double nextScale) _animateScale;
 

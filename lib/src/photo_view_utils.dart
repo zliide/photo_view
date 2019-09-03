@@ -24,6 +24,8 @@ double getScaleForScaleState(
   }
 }
 
+int counter = 0;
+
 class ScaleBoundaries {
   const ScaleBoundaries(this._minScale, this._maxScale, this._initialScale,
       this.outerSize, this.childSize);

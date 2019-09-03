@@ -206,7 +206,6 @@ class _PhotoViewImageWrapperState extends State<PhotoViewImageWrapper>
     _scaleAnimationController.dispose();
     _positionAnimationController.dispose();
     _rotationAnimationController.dispose();
-    widget.delegate.dispose();
     super.dispose();
   }
 

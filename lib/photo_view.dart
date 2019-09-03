@@ -16,6 +16,7 @@ export 'package:photo_view/src/photo_view_computed_scale.dart';
 export 'package:photo_view/src/photo_view_scale_state.dart';
 export 'package:photo_view/src/photo_view_controller.dart';
 export 'package:photo_view/src/photo_view_typedefs.dart';
+export 'package:photo_view/src/photo_view_utils.dart';
 
 /// A [StatefulWidget] that contains all the photo view rendering elements.
 ///
@@ -234,6 +235,7 @@ class PhotoView extends StatefulWidget {
     this.scaleStateCycle,
     this.onTapUp,
     this.onTapDown,
+    this.onLayout,
   })  : child = null,
         childSize = null,
         super(key: key);
@@ -263,6 +265,7 @@ class PhotoView extends StatefulWidget {
     this.scaleStateCycle,
     this.onTapUp,
     this.onTapDown,
+    this.onLayout,
   })  : loadingChild = null,
         imageProvider = null,
         gaplessPlayback = false,
@@ -343,6 +346,8 @@ class PhotoView extends StatefulWidget {
   /// location.
   final PhotoViewImageTapDownCallback onTapDown;
 
+  final ValueChanged<ScaleBoundaries> onLayout;
+
   @override
   State<StatefulWidget> createState() {
     return _PhotoViewState();
@@ -360,6 +365,8 @@ class _PhotoViewState extends State<PhotoView>
 
   bool _controlledScaleStateController;
   PhotoViewScaleStateController _scaleStateController;
+
+  PhotoViewControllerDelegate _controllersDelegate;
 
   Future<ImageInfo> _getImage() {
     final Completer completer = Completer<ImageInfo>();
@@ -411,6 +418,14 @@ class _PhotoViewState extends State<PhotoView>
     }
 
     _scaleStateController.outputScaleStateStream.listen(scaleStateListener);
+
+    _controllersDelegate = PhotoViewControllerDelegate(
+      controller: _controller,
+      scaleStateController: _scaleStateController,
+      scaleStateCycle: widget.scaleStateCycle ?? defaultScaleStateCycle,
+      basePosition: widget.basePosition ?? Alignment.center,
+      scaleBoundaries: scaleBoundaries,
+    );
   }
 
   @override
@@ -455,6 +470,7 @@ class _PhotoViewState extends State<PhotoView>
     if (_controlledScaleStateController) {
       _scaleStateController.dispose();
     }
+    _controllersDelegate.dispose();
     super.dispose();
   }
 
@@ -463,6 +479,13 @@ class _PhotoViewState extends State<PhotoView>
     if (mounted) {
       _outerSize = context.size;
     }
+    this.widget.onLayout(ScaleBoundaries(
+          widget.minScale ?? 0.0,
+          widget.maxScale ?? double.infinity,
+          widget.initialScale ?? PhotoViewComputedScale.contained,
+          _computedOuterSize,
+          _childSize,
+        ));
   }
 
   void scaleStateListener(PhotoViewScaleState scaleState) {
@@ -478,25 +501,23 @@ class _PhotoViewState extends State<PhotoView>
         : _buildCustomChild(context);
   }
 
+  ScaleBoundaries get scaleBoundaries {
+    return ScaleBoundaries(
+      widget.minScale ?? 0.0,
+      widget.maxScale ?? double.infinity,
+      widget.initialScale ?? PhotoViewComputedScale.contained,
+      _computedOuterSize,
+      _childSize,
+    );
+  }
+
   Widget _buildCustomChild(BuildContext context) {
     return PhotoViewImageWrapper.customChild(
       customChild: widget.child,
       backgroundDecoration: widget.backgroundDecoration,
       enableRotation: widget.enableRotation,
       heroTag: widget.heroTag,
-      delegate: PhotoViewControllerDelegate(
-        controller: _controller,
-        scaleStateController: _scaleStateController,
-        scaleStateCycle: widget.scaleStateCycle ?? defaultScaleStateCycle,
-        basePosition: widget.basePosition ?? Alignment.center,
-        scaleBoundaries: ScaleBoundaries(
-          widget.minScale ?? 0.0,
-          widget.maxScale ?? double.infinity,
-          widget.initialScale ?? PhotoViewComputedScale.contained,
-          _computedOuterSize,
-          _childSize,
-        ),
-      ),
+      delegate: _controllersDelegate..scaleBoundaries = scaleBoundaries,
       onTapUp: widget.onTapUp,
       onTapDown: widget.onTapDown,
     );
@@ -535,19 +556,7 @@ class _PhotoViewState extends State<PhotoView>
       enableRotation: widget.enableRotation,
       heroTag: widget.heroTag,
       transitionOnUserGestures: widget.transitionOnUserGestures,
-      delegate: PhotoViewControllerDelegate(
-        basePosition: widget.basePosition ?? Alignment.center,
-        controller: _controller,
-        scaleStateController: _scaleStateController,
-        scaleStateCycle: widget.scaleStateCycle ?? defaultScaleStateCycle,
-        scaleBoundaries: ScaleBoundaries(
-          widget.minScale ?? 0.0,
-          widget.maxScale ?? double.infinity,
-          widget.initialScale ?? PhotoViewComputedScale.contained,
-          _computedOuterSize,
-          _childSize,
-        ),
-      ),
+      delegate: _controllersDelegate..scaleBoundaries = scaleBoundaries,
       onTapUp: widget.onTapUp,
       onTapDown: widget.onTapDown,
     );
