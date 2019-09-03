@@ -222,8 +222,10 @@ class _PhotoViewImageWrapperState extends State<PhotoViewImageWrapper>
     return StreamBuilder(
         stream: widget.delegate.controller.outputStateStream,
         initialData: widget.delegate.controller.prevValue,
-        builder: (BuildContext context,
-            AsyncSnapshot<PhotoViewControllerValue> snapshot) {
+        builder: (
+          BuildContext context,
+          AsyncSnapshot<PhotoViewControllerValue> snapshot,
+        ) {
           if (snapshot.hasData) {
             final PhotoViewControllerValue value = snapshot.data;
             final matrix = Matrix4.identity()
@@ -233,8 +235,9 @@ class _PhotoViewImageWrapperState extends State<PhotoViewImageWrapper>
             final rotationMatrix = Matrix4.identity()..rotateZ(value.rotation);
             final Widget customChildLayout = CustomSingleChildLayout(
               delegate: _CenterWithOriginalSizeDelegate(
-                  widget.delegate.scaleBoundaries.childSize,
-                  widget.delegate.basePosition),
+                widget.delegate.scaleBoundaries.childSize,
+                widget.delegate.basePosition,
+              ),
               child: _buildHero(),
             );
             return GestureDetector(
@@ -254,7 +257,8 @@ class _PhotoViewImageWrapperState extends State<PhotoViewImageWrapper>
                 )),
                 decoration: widget.backgroundDecoration ??
                     const BoxDecoration(
-                        color: const Color.fromRGBO(0, 0, 0, 1.0)),
+                      color: const Color.fromRGBO(0, 0, 0, 1.0),
+                    ),
               ),
               onDoubleTap: widget.delegate.nextScaleState,
               onScaleStart: onScaleStart,

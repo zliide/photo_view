@@ -127,12 +127,15 @@ class PhotoViewController
     implements PhotoViewControllerBase<PhotoViewControllerValue> {
   PhotoViewController(
       {Offset initialPosition = Offset.zero, double initialRotation = 0.0})
-      : _valueNotifier = IgnorableValueNotifier(PhotoViewControllerValue(
+      : _valueNotifier = IgnorableValueNotifier(
+          PhotoViewControllerValue(
             position: initialPosition,
             rotation: initialRotation,
             scale:
                 null, // initial  scale is obtained via PhotoViewScaleState, therefore will be computed via scaleStateAwareScale
-            rotationFocusPoint: null)),
+            rotationFocusPoint: null,
+          ),
+        ),
         super() {
     initial = value;
     prevValue = initial;
@@ -142,7 +145,7 @@ class PhotoViewController
     _outputCtrl.sink.add(initial);
   }
 
-  IgnorableValueNotifier<PhotoViewControllerValue> _valueNotifier;
+  final IgnorableValueNotifier<PhotoViewControllerValue> _valueNotifier;
 
   PhotoViewControllerValue initial;
 
