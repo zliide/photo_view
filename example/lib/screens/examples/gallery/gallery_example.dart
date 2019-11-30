@@ -194,6 +194,7 @@ class _GalleryPhotoViewWrapperState extends State<GalleryPhotoViewWrapper> {
             minScale: PhotoViewComputedScale.contained * (0.5 + index / 10),
             maxScale: PhotoViewComputedScale.covered * 1.1,
             heroAttributes: PhotoViewHeroAttributes(tag: item.id),
+            basePosition: Alignment.bottomLeft
           );
   }
 }

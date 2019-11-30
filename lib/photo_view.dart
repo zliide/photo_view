@@ -30,7 +30,6 @@ export 'src/utils/photo_view_hero_attributes.dart';
 ///  loadingChild: LoadingText(),
 ///  backgroundDecoration: BoxDecoration(color: Colors.black),
 ///  gaplessPlayback: false,
-///  customSize: MediaQuery.of(context).size,
 ///  heroAttributes: const HeroAttributes(
 ///   tag: "someTag",
 ///   transitionOnUserGestures: true,
