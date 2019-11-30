@@ -82,13 +82,24 @@ mixin PhotoViewControllerDelegate on State<PhotoViewCore> {
   Offset get position => controller.position;
 
   double get scale {
-    if (markNeedsScaleRecalc &&
-        !isScaleStateZooming(scaleStateController.scaleState)) {
-      scale = getScaleForScaleState(
-        scaleStateController.scaleState,
+    final isZooming = isScaleStateZooming(scaleStateController.scaleState);
+    final scaleNull = controller.scale == null;
+    if(scaleNull) {
+      if (markNeedsScaleRecalc && !isZooming ) {
+        final newScale = getScaleForScaleState(
+          scaleStateController.scaleState,
+          scaleBoundaries,
+        );
+        markNeedsScaleRecalc = false;
+        scale = newScale;
+        return newScale;
+      }
+      const newScaleState = PhotoViewScaleState.initial;
+      markNeedsScaleRecalc = false;
+      return getScaleForScaleState(
+        newScaleState,
         scaleBoundaries,
       );
-      markNeedsScaleRecalc = false;
     }
     return controller.scale;
   }

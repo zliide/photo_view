@@ -281,6 +281,9 @@ class PhotoViewCoreState extends State<PhotoViewCore>
           AsyncSnapshot<PhotoViewControllerValue> snapshot,
         ) {
           if (snapshot.hasData) {
+            if(scale == null) {
+              print("is null");
+            }
             final PhotoViewControllerValue value = snapshot.data;
             final matrix = Matrix4.identity()
               ..translate(value.position.dx, value.position.dy)
