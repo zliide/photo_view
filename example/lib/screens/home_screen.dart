@@ -6,6 +6,7 @@ import 'package:photo_view_example/screens/examples/full_screen_examples.dart';
 import 'package:photo_view_example/screens/examples/gallery/gallery_example.dart';
 import 'package:photo_view_example/screens/examples/hero_example.dart';
 import 'package:photo_view_example/screens/examples/inline_examples.dart';
+import 'package:photo_view_example/screens/examples/ontap_callbacks.dart';
 import 'package:photo_view_example/screens/examples/rotation_examples.dart';
 import './app_bar.dart';
 
@@ -28,70 +29,15 @@ class HomeScreen extends StatelessWidget {
           Expanded(
             child: ListView(
               children: <Widget>[
-                _buildItem(context, onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => FullScreenExamples(),
-                    ),
-                  );
-                }, text: "Full screen"),
-                _buildItem(context, onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => ControllerExample(),
-                    ),
-                  );
-                }, text: "Controller"),
-                _buildItem(context, onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => InlineExample(),
-                    ),
-                  );
-                }, text: "Part of the screen"),
-                _buildItem(context, onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => RotationExamples(),
-                    ),
-                  );
-                }, text: "Rotation Gesture"),
-                _buildItem(context, onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => HeroExample(),
-                    ),
-                  );
-                }, text: "Hero animation"),
-                _buildItem(context, onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => GalleryExample(),
-                    ),
-                  );
-                }, text: "Gallery"),
-                _buildItem(context, onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => CustomChildExample(),
-                    ),
-                  );
-                }, text: "Custom child"),
-                _buildItem(context, onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => DialogExample(),
-                    ),
-                  );
-                }, text: "Integrated to dialogs"),
+                HomeScreenLink(text: "Full screen", routeBuilder: (_) => FullScreenExamples(),),
+                HomeScreenLink(text: "Controller", routeBuilder: (_) => ControllerExample(),),
+                HomeScreenLink(text: "Part of the screen", routeBuilder: (_) => InlineExample(),),
+                HomeScreenLink(text: "Rotation gesture", routeBuilder: (_) => RotationExamples(),),
+                HomeScreenLink(text: "Hero animation", routeBuilder: (_) => HeroExample(),),
+                HomeScreenLink(text: "Gallery", routeBuilder: (_) => GalleryExample(),),
+                HomeScreenLink(text: "Custom child", routeBuilder: (_) => CustomChildExample(),),
+                HomeScreenLink(text: "Integrated to dialogs", routeBuilder: (_) => DialogExample(),),
+                HomeScreenLink(text: "PnTap callbacks", routeBuilder: (_) => OnTapCallbacksExample(),),
               ],
             ),
           ),
@@ -99,15 +45,34 @@ class HomeScreen extends StatelessWidget {
       ),
     );
   }
+}
 
-  Widget _buildItem(context, {String text, Function onPressed}) {
+
+class HomeScreenLink extends StatelessWidget {
+
+  const HomeScreenLink({Key key, this.routeBuilder, this.text}) : super(key: key);
+
+  final WidgetBuilder routeBuilder;
+  final String text;
+
+  VoidCallback onPressed(BuildContext context) => () {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: routeBuilder,
+      ),
+    );
+  };
+
+  @override
+  Widget build(BuildContext context) {
     return FlatButton(
       padding: const EdgeInsets.symmetric(vertical: 25.0, horizontal: 20.0),
       child: Text(
         text,
         style: const TextStyle(fontSize: 18.0, fontWeight: FontWeight.w700),
       ),
-      onPressed: onPressed,
+      onPressed: onPressed(context),
     );
   }
 }

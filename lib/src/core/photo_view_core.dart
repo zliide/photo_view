@@ -305,6 +305,7 @@ class PhotoViewCoreState extends State<PhotoViewCore>
               ),
               child: _buildHero(),
             );
+
             return PhotoViewGestureDetector(
               child: Container(
                 constraints: widget.tightMode
