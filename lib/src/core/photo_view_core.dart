@@ -1,4 +1,6 @@
 import 'package:flutter/widgets.dart';
+import 'package:photo_view/src/utils/value_updater.dart';
+import 'package:vector_math/vector_math_64.dart';
 
 import 'package:photo_view/photo_view.dart'
     show
@@ -95,9 +97,25 @@ class PhotoViewCoreState extends State<PhotoViewCore>
         TickerProviderStateMixin,
         PhotoViewControllerDelegate,
         HitCornersDetector {
-  Offset _normalizedPosition;
-  double _scaleBefore;
-  double _rotationBefore;
+  Matrix4 matrix = Matrix4.identity();
+
+  double _scaleBefore = 0.0;
+
+  @override
+  double get scale => matrix.storage[0];
+
+  @override
+  Offset get position {
+    final t = matrix.getTranslation();
+    return Offset(t.x, t.y);
+  }
+
+  final ValueUpdater<Offset> _translationUpdater = ValueUpdater(
+    onUpdate: (oldVal, newVal) => newVal - oldVal,
+  );
+  final ValueUpdater<double> _scaleUpdater = ValueUpdater(
+    onUpdate: (oldVal, newVal) => newVal / oldVal,
+  );
 
   AnimationController _scaleAnimationController;
   Animation<double> _scaleAnimation;
@@ -105,60 +123,78 @@ class PhotoViewCoreState extends State<PhotoViewCore>
   AnimationController _positionAnimationController;
   Animation<Offset> _positionAnimation;
 
-  AnimationController _rotationAnimationController;
-  Animation<double> _rotationAnimation;
-
   PhotoViewHeroAttributes get heroAttributes => widget.heroAttributes;
 
   ScaleBoundaries cachedScaleBoundaries;
 
   void handleScaleAnimation() {
-    scale = _scaleAnimation.value;
+    setState(() {
+      matrix..scale(1 / scale)..scale(_scaleAnimation.value);
+      scale = _scaleAnimation.value;
+    });
   }
 
   void handlePositionAnimate() {
-    controller.position = _positionAnimation.value;
-  }
-
-  void handleRotationAnimation() {
-    controller.rotation = _rotationAnimation.value;
+    setState(() {
+      matrix.setTranslation(Vector3(
+          _positionAnimation.value.dx, _positionAnimation.value.dy, 0.0));
+      controller.position = _positionAnimation.value;
+    });
   }
 
   void onScaleStart(ScaleStartDetails details) {
-    _rotationBefore = controller.rotation;
-    _scaleBefore = scale;
-    _normalizedPosition = details.focalPoint - controller.position;
     _scaleAnimationController.stop();
     _positionAnimationController.stop();
-    _rotationAnimationController.stop();
+
+    _scaleBefore = scale;
+
+    _translationUpdater.value = alignFocalPoint(details.focalPoint);
+    _scaleUpdater.value = 1.0;
   }
 
   void onScaleUpdate(ScaleUpdateDetails details) {
-    final double newScale = _scaleBefore * details.scale;
-    final Offset delta = details.focalPoint - _normalizedPosition;
+    setState(() {
+      var translationDeltaMatrix = Matrix4.identity();
+      var scaleDeltaMatrix = Matrix4.identity();
 
-    updateScaleStateFromNewScale(newScale);
+      final alignedFocalPoint = alignFocalPoint(details.focalPoint);
 
-    //
-    updateMultiple(
-      scale: newScale,
-      position: clampPosition(position: delta * details.scale),
-      rotation: _rotationBefore + details.rotation,
-      rotationFocusPoint: details.focalPoint,
-    );
+      // handle matrix translating
+      final translationDelta = _translationUpdater.update(alignedFocalPoint);
+      translationDeltaMatrix = _translate(translationDelta);
+      matrix = translationDeltaMatrix * matrix;
+
+      final RenderBox renderBox = context.findRenderObject();
+      final focalPoint = renderBox.globalToLocal(alignedFocalPoint);
+
+      // handle matrix scaling
+      if (details.scale != 1.0) {
+        final scaleDelta = _scaleUpdater.update(details.scale);
+        scaleDeltaMatrix = _scale(scaleDelta, focalPoint);
+        matrix = scaleDeltaMatrix * matrix;
+      }
+
+      updateScaleStateFromNewScale(scale);
+
+      updateMultiple(
+          scale: scale,
+          position: clampPosition(position: alignedFocalPoint * details.scale));
+
+      _clampMatrix();
+    });
   }
 
   void onScaleEnd(ScaleEndDetails details) {
-    final double _scale = scale;
-    final Offset _position = controller.position;
-    final double maxScale = scaleBoundaries.maxScale;
-    final double minScale = scaleBoundaries.minScale;
+    final _scale = scale;
+    final _position = controller.position;
+    final maxScale = scaleBoundaries.maxScale;
+    final minScale = scaleBoundaries.minScale;
 
     //animate back to maxScale if gesture exceeded the maxScale specified
     if (_scale > maxScale) {
-      final double scaleComebackRatio = maxScale / _scale;
+      final scaleComebackRatio = maxScale / _scale;
       animateScale(_scale, maxScale);
-      final Offset clampedPosition = clampPosition(
+      final clampedPosition = clampPosition(
         position: _position * scaleComebackRatio,
         scale: maxScale,
       );
@@ -168,7 +204,7 @@ class PhotoViewCoreState extends State<PhotoViewCore>
 
     //animate back to minScale if gesture fell smaller than the minScale specified
     if (_scale < minScale) {
-      final double scaleComebackRatio = minScale / _scale;
+      final scaleComebackRatio = minScale / _scale;
       animateScale(_scale, minScale);
       animatePosition(
         _position,
@@ -180,11 +216,11 @@ class PhotoViewCoreState extends State<PhotoViewCore>
       return;
     }
     // get magnitude from gesture velocity
-    final double magnitude = details.velocity.pixelsPerSecond.distance;
+    final magnitude = details.velocity.pixelsPerSecond.distance;
 
     // animate velocity only if there is no scale change and a significant magnitude
     if (_scaleBefore / _scale == 1.0 && magnitude >= 400.0) {
-      final Offset direction = details.velocity.pixelsPerSecond / magnitude;
+      final direction = details.velocity.pixelsPerSecond / magnitude;
       animatePosition(
         _position,
         clampPosition(position: _position + direction * 100.0),
@@ -214,26 +250,8 @@ class PhotoViewCoreState extends State<PhotoViewCore>
       ..fling(velocity: 0.4);
   }
 
-  void animateRotation(double from, double to) {
-    _rotationAnimation = Tween<double>(begin: from, end: to)
-        .animate(_rotationAnimationController);
-    _rotationAnimationController
-      ..value = 0.0
-      ..fling(velocity: 0.4);
-  }
-
   void onAnimationStatus(AnimationStatus status) {
-    if (status == AnimationStatus.completed) {
-      onAnimationStatusCompleted();
-    }
-  }
-
-  /// Check if scale is equal to initial after scale animation update
-  void onAnimationStatusCompleted() {
-    if (scaleStateController.scaleState != PhotoViewScaleState.initial &&
-        scale == scaleBoundaries.initialScale) {
-      scaleStateController.setInvisibly(PhotoViewScaleState.initial);
-    }
+    if (status == AnimationStatus.completed) {}
   }
 
   @override
@@ -246,18 +264,17 @@ class PhotoViewCoreState extends State<PhotoViewCore>
     _positionAnimationController = AnimationController(vsync: this)
       ..addListener(handlePositionAnimate);
 
-    _rotationAnimationController = AnimationController(vsync: this)
-      ..addListener(handleRotationAnimation);
     startListeners();
     addAnimateOnScaleStateUpdate(animateOnScaleStateUpdate);
 
     cachedScaleBoundaries = widget.scaleBoundaries;
+
+    matrix.scale(cachedScaleBoundaries.initialScale);
   }
 
   void animateOnScaleStateUpdate(double prevScale, double nextScale) {
     animateScale(prevScale, nextScale);
     animatePosition(controller.position, Offset.zero);
-    animateRotation(controller.rotation, 0.0);
   }
 
   @override
@@ -265,7 +282,6 @@ class PhotoViewCoreState extends State<PhotoViewCore>
     _scaleAnimationController.removeStatusListener(onAnimationStatus);
     _scaleAnimationController.dispose();
     _positionAnimationController.dispose();
-    _rotationAnimationController.dispose();
     super.dispose();
   }
 
@@ -293,17 +309,7 @@ class PhotoViewCoreState extends State<PhotoViewCore>
           AsyncSnapshot<PhotoViewControllerValue> snapshot,
         ) {
           if (snapshot.hasData) {
-            final PhotoViewControllerValue value = snapshot.data;
             final useImageScale = widget.filterQuality != FilterQuality.none;
-
-            final computedScale = useImageScale ? 1.0 : scale;
-
-            final matrix = Matrix4.identity()
-              ..translate(value.position.dx, value.position.dy)
-              ..scale(computedScale);
-            if (widget.enableRotation) {
-              matrix..rotateZ(value.rotation);
-            }
 
             final Widget customChildLayout = CustomSingleChildLayout(
               delegate: _CenterWithOriginalSizeDelegate(
@@ -313,6 +319,7 @@ class PhotoViewCoreState extends State<PhotoViewCore>
               ),
               child: _buildHero(),
             );
+
             return PhotoViewGestureDetector(
               child: Container(
                 constraints: widget.tightMode
@@ -361,9 +368,88 @@ class PhotoViewCoreState extends State<PhotoViewCore>
             image: widget.imageProvider,
             gaplessPlayback: widget.gaplessPlayback ?? false,
             filterQuality: widget.filterQuality,
-            width: scaleBoundaries.childSize.width * scale,
+            width: scaleBoundaries.childSize.width * 1.00000000001,
             fit: BoxFit.contain,
           );
+  }
+
+  Offset alignFocalPoint(Offset focalPoint) {
+    return focalPoint - basePosition.alongSize(scaleBoundaries.outerSize);
+  }
+
+  void _clampMatrix() {
+    final _scale = scale;
+    // final radians = Quaternion.fromRotation(matrix.getRotation()).radians;
+
+    matrix.scale(1 / _scale);
+
+    final pos = -position;
+
+    final computedWidth = scaleBoundaries.childSize.width * _scale;
+    final computedHeight = scaleBoundaries.childSize.height * _scale;
+
+    final screenWidth = scaleBoundaries.outerSize.width;
+    final screenHeight = scaleBoundaries.outerSize.height;
+
+    final widthDiff = computedWidth - screenWidth;
+    final heightDiff = computedHeight - screenHeight;
+
+    final positionX = basePosition.x;
+    final positionY = basePosition.y;
+
+    final maxX = ((positionX + 1).abs() / 2) * widthDiff;
+    final minX = -maxX;
+    final maxY = ((positionY + 1).abs() / 2) * heightDiff;
+    final minY = -maxY;
+
+    if (screenWidth < computedWidth) {
+      if (pos.dx < minX) {
+        matrix.leftTranslate(pos.dx - minX, 0.0);
+      }
+      if (maxX < pos.dx) {
+        matrix.leftTranslate(pos.dx - maxX, 0.0);
+      }
+    } else {
+      matrix.leftTranslate(pos.dx, 0.0);
+    }
+    if (screenHeight < computedHeight) {
+      if (pos.dy < minY) {
+        matrix.leftTranslate(0.0, pos.dy - minY);
+      }
+      if (maxY < pos.dy) {
+        matrix.leftTranslate(0.0, pos.dy - maxY);
+      }
+    } else {
+      matrix.leftTranslate(0.0, pos.dy);
+    }
+
+    matrix.scale(_scale);
+  }
+
+  Matrix4 _translate(Offset translation) {
+    final dx = translation.dx;
+    final dy = translation.dy;
+
+    //  ..[0]  = 1       # x scale
+    //  ..[5]  = 1       # y scale
+    //  ..[10] = 1       # diagonal "one"
+    //  ..[12] = dx      # x translation
+    //  ..[13] = dy      # y translation
+    //  ..[15] = 1       # diagonal "one"
+    return Matrix4(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, dx, dy, 0, 1);
+  }
+
+  Matrix4 _scale(double scale, Offset focalPoint) {
+    final dx = (1 - scale) * focalPoint.dx;
+    final dy = (1 - scale) * focalPoint.dy;
+
+    //  ..[0]  = scale   # x scale
+    //  ..[5]  = scale   # y scale
+    //  ..[10] = 1       # diagonal "one"
+    //  ..[12] = dx      # x translation
+    //  ..[13] = dy      # y translation
+    //  ..[15] = 1       # diagonal "one"
+    return Matrix4(scale, 0, 0, 0, 0, scale, 0, 0, 0, 0, 1, 0, dx, dy, 0, 1);
   }
 }
 
@@ -380,14 +466,14 @@ class _CenterWithOriginalSizeDelegate extends SingleChildLayoutDelegate {
 
   @override
   Offset getPositionForChild(Size size, Size childSize) {
-    final childWidth = useImageScale ? childSize.width : subjectSize.width;
-    final childHeight = useImageScale ? childSize.height : subjectSize.height;
-
-    final halfWidth = (size.width - childWidth) / 2;
-    final halfHeight = (size.height - childHeight) / 2;
-
-    final double offsetX = halfWidth * (basePosition.x + 1);
-    final double offsetY = halfHeight * (basePosition.y + 1);
+    final offsetX =
+        ((size.width - (useImageScale ? childSize.width : subjectSize.width)) /
+                2) *
+            (basePosition.x + 1);
+    final offsetY = ((size.height -
+                (useImageScale ? childSize.height : subjectSize.height)) /
+            2) *
+        (basePosition.y + 1);
     return Offset(offsetX, offsetY);
   }
 
