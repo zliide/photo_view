@@ -136,9 +136,9 @@ class FullScreenExamples extends StatelessWidget {
                         builder: (context) => FullScreenWrapper(
                           imageProvider:
                               const AssetImage("assets/large-image.jpg"),
-                          minScale: PhotoViewComputedScale.contained * 0.8,
-                          maxScale: PhotoViewComputedScale.covered * 1.1,
-                          initialScale: PhotoViewComputedScale.covered * 1.1,
+                          minScale: PhotoViewComputedScale.contained * 0.9,
+                          maxScale: PhotoViewComputedScale.covered * 2.5,
+                          initialScale: PhotoViewComputedScale.contained * 1.2,
                         ),
                       ),
                     );

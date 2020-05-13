@@ -4,7 +4,6 @@ import 'package:vector_math/vector_math_64.dart';
 
 import 'package:photo_view/photo_view.dart'
     show
-        PhotoViewScaleState,
         PhotoViewHeroAttributes,
         PhotoViewImageTapDownCallback,
         PhotoViewImageTapUpCallback,
@@ -19,6 +18,9 @@ import 'package:photo_view/src/core/photo_view_hit_corners.dart';
 const _defaultDecoration = const BoxDecoration(
   color: const Color.fromRGBO(0, 0, 0, 1.0),
 );
+
+typedef MathF<T extends num> = T Function(T, T);
+typedef VFn = Vector4 Function(double x, double y, double z, double w);
 
 /// Internal widget in which controls all animations lifecycle, core responses
 /// to user gestures, updates to  the controller state and mounts the entire PhotoView Layout
@@ -169,10 +171,31 @@ class PhotoViewCoreState extends State<PhotoViewCore>
 
       // handle matrix scaling
       if (details.scale != 1.0) {
+        final _oldScale = scale;
+        final maxScale = scaleBoundaries.maxScale;
+        final minScale = scaleBoundaries.minScale;
+
         final scaleDelta = _scaleUpdater.update(details.scale);
         scaleDeltaMatrix = _scale(scaleDelta, focalPoint);
-        matrix = scaleDeltaMatrix * matrix;
+
+        if (_oldScale > (maxScale + 0.25)) {
+          updateMultiple(
+              scale: scale,
+              position:
+                  clampPosition(position: alignedFocalPoint * details.scale));
+
+          return;
+        }
+
+        if (_oldScale < minScale) {
+          updateMultiple(
+            scale: scale,
+          );
+
+          return;
+        }
       }
+      matrix = scaleDeltaMatrix * matrix;
 
       updateScaleStateFromNewScale(scale);
 
@@ -194,11 +217,13 @@ class PhotoViewCoreState extends State<PhotoViewCore>
     if (_scale > maxScale) {
       final scaleComebackRatio = maxScale / _scale;
       animateScale(_scale, maxScale);
-      final clampedPosition = clampPosition(
-        position: _position * scaleComebackRatio,
-        scale: maxScale,
+      animatePosition(
+        _position,
+        clampPosition(
+          position: _position * scaleComebackRatio,
+          scale: maxScale,
+        ),
       );
-      animatePosition(_position, clampedPosition);
       return;
     }
 
@@ -259,6 +284,7 @@ class PhotoViewCoreState extends State<PhotoViewCore>
     super.initState();
     _scaleAnimationController = AnimationController(vsync: this)
       ..addListener(handleScaleAnimation);
+
     _scaleAnimationController.addStatusListener(onAnimationStatus);
 
     _positionAnimationController = AnimationController(vsync: this)
@@ -379,7 +405,6 @@ class PhotoViewCoreState extends State<PhotoViewCore>
 
   void _clampMatrix() {
     final _scale = scale;
-    // final radians = Quaternion.fromRotation(matrix.getRotation()).radians;
 
     matrix.scale(1 / _scale);
 

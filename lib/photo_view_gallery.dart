@@ -102,7 +102,6 @@ class PhotoViewGallery extends StatefulWidget {
   const PhotoViewGallery({
     Key key,
     @required this.pageOptions,
-    @Deprecated("Use loadingBuilder instead") this.loadingChild,
     this.loadingBuilder,
     this.loadFailedChild,
     this.backgroundDecoration,
@@ -128,7 +127,6 @@ class PhotoViewGallery extends StatefulWidget {
     Key key,
     @required this.itemCount,
     @required this.builder,
-    @Deprecated("Use loadingBuilder instead") this.loadingChild,
     this.loadingBuilder,
     this.loadFailedChild,
     this.backgroundDecoration,
@@ -161,9 +159,6 @@ class PhotoViewGallery extends StatefulWidget {
 
   /// Mirror to [PhotoView.loadingBuilder]
   final LoadingBuilder loadingBuilder;
-
-  /// Mirror to [PhotoView.loadingchild]
-  final Widget loadingChild;
 
   /// Mirror to [PhotoView.loadFailedChild]
   final Widget loadFailedChild;
@@ -277,7 +272,6 @@ class _PhotoViewGalleryState extends State<PhotoViewGallery> {
             key: ObjectKey(index),
             imageProvider: pageOption.imageProvider,
             loadingBuilder: widget.loadingBuilder,
-            loadingChild: widget.loadingChild,
             loadFailedChild: widget.loadFailedChild,
             backgroundDecoration: widget.backgroundDecoration,
             controller: pageOption.controller,

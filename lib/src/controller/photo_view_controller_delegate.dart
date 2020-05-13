@@ -128,6 +128,8 @@ mixin PhotoViewControllerDelegate on State<PhotoViewCore> {
       scaleStateController.scaleState = scaleStateCycle(scaleState);
       return;
     }
+    print('in double tab to zoom');
+
     final double originalScale = getScaleForScaleState(
       scaleState,
       scaleBoundaries,
