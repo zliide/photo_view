@@ -19,9 +19,6 @@ const _defaultDecoration = const BoxDecoration(
   color: const Color.fromRGBO(0, 0, 0, 1.0),
 );
 
-typedef MathF<T extends num> = T Function(T, T);
-typedef VFn = Vector4 Function(double x, double y, double z, double w);
-
 /// Internal widget in which controls all animations lifecycle, core responses
 /// to user gestures, updates to  the controller state and mounts the entire PhotoView Layout
 class PhotoViewCore extends StatefulWidget {
@@ -155,56 +152,41 @@ class PhotoViewCoreState extends State<PhotoViewCore>
   }
 
   void onScaleUpdate(ScaleUpdateDetails details) {
-    setState(() {
-      var translationDeltaMatrix = Matrix4.identity();
-      var scaleDeltaMatrix = Matrix4.identity();
+    var translationDeltaMatrix = Matrix4.identity();
+    var scaleDeltaMatrix = Matrix4.identity();
 
-      final alignedFocalPoint = alignFocalPoint(details.focalPoint);
+    final alignedFocalPoint = alignFocalPoint(details.focalPoint);
 
-      // handle matrix translating
-      final translationDelta = _translationUpdater.update(alignedFocalPoint);
-      translationDeltaMatrix = _translate(translationDelta);
-      matrix = translationDeltaMatrix * matrix;
+    // handle matrix translating
+    final translationDelta = _translationUpdater.update(alignedFocalPoint);
+    translationDeltaMatrix = _translate(translationDelta);
+    matrix = translationDeltaMatrix * matrix;
 
-      final RenderBox renderBox = context.findRenderObject();
-      final focalPoint = renderBox.globalToLocal(alignedFocalPoint);
+    final RenderBox renderBox = context.findRenderObject();
+    final focalPoint = renderBox.globalToLocal(alignedFocalPoint);
 
-      // handle matrix scaling
-      if (details.scale != 1.0) {
-        final _oldScale = scale;
-        final maxScale = scaleBoundaries.maxScale;
-        final minScale = scaleBoundaries.minScale;
+    // handle matrix scaling
+    if (details.scale != 1.0) {
+      final scaleDelta = _scaleUpdater.update(details.scale);
+      scaleDeltaMatrix = _scale(scaleDelta, focalPoint);
 
-        final scaleDelta = _scaleUpdater.update(details.scale);
-        scaleDeltaMatrix = _scale(scaleDelta, focalPoint);
+      if (scale > (scaleBoundaries.maxScale + 0.55)) {
+        updateMultiple(
+            position:
+                clampPosition(position: alignedFocalPoint * details.scale));
 
-        if (_oldScale > (maxScale + 0.25)) {
-          updateMultiple(
-              scale: scale,
-              position:
-                  clampPosition(position: alignedFocalPoint * details.scale));
-
-          return;
-        }
-
-        if (_oldScale < minScale) {
-          updateMultiple(
-            scale: scale,
-          );
-
-          return;
-        }
+        return;
       }
       matrix = scaleDeltaMatrix * matrix;
+    }
 
-      updateScaleStateFromNewScale(scale);
+    updateScaleStateFromNewScale(scale);
 
-      updateMultiple(
-          scale: scale,
-          position: clampPosition(position: alignedFocalPoint * details.scale));
+    updateMultiple(
+        scale: scale,
+        position: clampPosition(position: alignedFocalPoint * details.scale));
 
-      _clampMatrix();
-    });
+    _clampMatrix();
   }
 
   void onScaleEnd(ScaleEndDetails details) {
