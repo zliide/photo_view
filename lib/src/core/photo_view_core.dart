@@ -170,7 +170,7 @@ class PhotoViewCoreState extends State<PhotoViewCore>
       final scaleDelta = _scaleUpdater.update(details.scale);
       scaleDeltaMatrix = _scale(scaleDelta, focalPoint);
 
-      if (scale > (scaleBoundaries.maxScale + 0.85)) {
+      if (scale > (scaleBoundaries.maxScale + 1)) {
         updateMultiple(
             position:
                 clampPosition(position: alignedFocalPoint * details.scale));
