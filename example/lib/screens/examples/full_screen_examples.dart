@@ -265,7 +265,6 @@ class _FullScreenWrapperState extends State<FullScreenWrapper> {
           basePosition: widget.basePosition,
           filterQuality: widget.filterQuality,
           scaleStateChangedCallback: (value) {
-            print(value);
             if (value == PhotoViewScaleState.zoomedIn) {
               setState(() {
                 shouldTranslateLR = true;
