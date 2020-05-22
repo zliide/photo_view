@@ -29,6 +29,7 @@ class PhotoViewCore extends StatefulWidget {
     @required this.gaplessPlayback,
     @required this.heroAttributes,
     @required this.enableRotation,
+    @required this.enableLRTransition,
     @required this.onTapUp,
     @required this.onTapDown,
     @required this.gestureDetectorBehavior,
@@ -48,6 +49,7 @@ class PhotoViewCore extends StatefulWidget {
     @required this.backgroundDecoration,
     @required this.heroAttributes,
     @required this.enableRotation,
+    @required this.enableLRTransition,
     @required this.onTapUp,
     @required this.onTapDown,
     @required this.gestureDetectorBehavior,
@@ -67,6 +69,7 @@ class PhotoViewCore extends StatefulWidget {
   final bool gaplessPlayback;
   final PhotoViewHeroAttributes heroAttributes;
   final bool enableRotation;
+  final bool enableLRTransition;
   final Widget customChild;
 
   final PhotoViewControllerBase controller;
@@ -158,9 +161,11 @@ class PhotoViewCoreState extends State<PhotoViewCore>
     final alignedFocalPoint = alignFocalPoint(details.focalPoint);
 
     // handle matrix translating
-    final translationDelta = _translationUpdater.update(alignedFocalPoint);
-    translationDeltaMatrix = _translate(translationDelta);
-    matrix = translationDeltaMatrix * matrix;
+    if (widget.enableLRTransition) {
+      final translationDelta = _translationUpdater.update(alignedFocalPoint);
+      translationDeltaMatrix = _translate(translationDelta);
+      matrix = translationDeltaMatrix * matrix;
+    }
 
     final RenderBox renderBox = context.findRenderObject();
     final focalPoint = renderBox.globalToLocal(alignedFocalPoint);
@@ -221,17 +226,6 @@ class PhotoViewCoreState extends State<PhotoViewCore>
         ),
       );
       return;
-    }
-    // get magnitude from gesture velocity
-    final magnitude = details.velocity.pixelsPerSecond.distance;
-
-    // animate velocity only if there is no scale change and a significant magnitude
-    if (_scaleBefore / _scale == 1.0 && magnitude >= 400.0) {
-      final direction = details.velocity.pixelsPerSecond / magnitude;
-      animatePosition(
-        _position,
-        clampPosition(position: _position + direction * 100.0),
-      );
     }
   }
 

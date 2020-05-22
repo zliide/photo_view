@@ -245,6 +245,7 @@ class PhotoView extends StatefulWidget {
     this.heroAttributes,
     this.scaleStateChangedCallback,
     this.enableRotation = false,
+    this.enableLRTransition = true,
     this.controller,
     this.scaleStateController,
     this.maxScale,
@@ -276,6 +277,7 @@ class PhotoView extends StatefulWidget {
     this.heroAttributes,
     this.scaleStateChangedCallback,
     this.enableRotation = false,
+    this.enableLRTransition = true,
     this.controller,
     this.scaleStateController,
     this.maxScale,
@@ -327,6 +329,9 @@ class PhotoView extends StatefulWidget {
 
   /// A flag that enables the rotation gesture support
   final bool enableRotation;
+
+  /// A flag that enables the left/right gesture support
+  final bool enableLRTransition;
 
   /// The specified custom child to be shown instead of a image
   final Widget child;
@@ -548,6 +553,7 @@ class _PhotoViewState extends State<PhotoView> {
       customChild: widget.child,
       backgroundDecoration: widget.backgroundDecoration,
       enableRotation: widget.enableRotation,
+      enableLRTransition: widget.enableLRTransition,
       heroAttributes: widget.heroAttributes,
       controller: _controller,
       scaleStateController: _scaleStateController,
@@ -603,6 +609,7 @@ class _PhotoViewState extends State<PhotoView> {
       backgroundDecoration: widget.backgroundDecoration,
       gaplessPlayback: widget.gaplessPlayback,
       enableRotation: widget.enableRotation,
+      enableLRTransition: widget.enableLRTransition,
       heroAttributes: widget.heroAttributes,
       basePosition: widget.basePosition ?? Alignment.center,
       controller: _controller,

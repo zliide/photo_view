@@ -220,7 +220,7 @@ class ExampleButtonNode extends StatelessWidget {
   }
 }
 
-class FullScreenWrapper extends StatelessWidget {
+class FullScreenWrapper extends StatefulWidget {
   const FullScreenWrapper({
     this.imageProvider,
     this.loadingBuilder,
@@ -242,6 +242,13 @@ class FullScreenWrapper extends StatelessWidget {
   final FilterQuality filterQuality;
 
   @override
+  _FullScreenWrapperState createState() => _FullScreenWrapperState();
+}
+
+class _FullScreenWrapperState extends State<FullScreenWrapper> {
+  var shouldTranslateLR = false;
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
@@ -249,14 +256,27 @@ class FullScreenWrapper extends StatelessWidget {
           height: MediaQuery.of(context).size.height,
         ),
         child: PhotoView(
-          imageProvider: imageProvider,
-          loadingBuilder: loadingBuilder,
-          backgroundDecoration: backgroundDecoration,
-          minScale: minScale,
-          maxScale: maxScale,
-          initialScale: initialScale,
-          basePosition: basePosition,
-          filterQuality: filterQuality,
+          imageProvider: widget.imageProvider,
+          loadingBuilder: widget.loadingBuilder,
+          backgroundDecoration: widget.backgroundDecoration,
+          minScale: widget.minScale,
+          maxScale: widget.maxScale,
+          initialScale: widget.initialScale,
+          basePosition: widget.basePosition,
+          filterQuality: widget.filterQuality,
+          scaleStateChangedCallback: (value) {
+            print(value);
+            if (value == PhotoViewScaleState.zoomedIn) {
+              setState(() {
+                shouldTranslateLR = true;
+              });
+            } else {
+              setState(() {
+                shouldTranslateLR = false;
+              });
+            }
+          },
+          enableLRTransition: shouldTranslateLR,
         ),
       ),
     );
