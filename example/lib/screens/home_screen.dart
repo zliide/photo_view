@@ -6,6 +6,7 @@ import 'package:photo_view_example/screens/examples/full_screen_examples.dart';
 import 'package:photo_view_example/screens/examples/gallery/gallery_example.dart';
 import 'package:photo_view_example/screens/examples/hero_example.dart';
 import 'package:photo_view_example/screens/examples/inline_examples.dart';
+import 'package:photo_view_example/screens/examples/optab_callback.dart';
 import 'package:photo_view_example/screens/examples/rotation_examples.dart';
 import './app_bar.dart';
 
@@ -36,6 +37,14 @@ class HomeScreen extends StatelessWidget {
                     ),
                   );
                 }, text: "Full screen"),
+                _buildItem(context, onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => OnTapCallbacksExample(),
+                    ),
+                  );
+                }, text: "OnTapUp example"),
                 _buildItem(context, onPressed: () {
                   Navigator.push(
                     context,

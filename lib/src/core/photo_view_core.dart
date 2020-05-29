@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'dart:math' as math;
+
 import 'package:flutter/widgets.dart';
 import 'package:photo_view/src/utils/value_updater.dart';
 import 'package:vector_math/vector_math_64.dart';
@@ -14,6 +17,7 @@ import 'package:photo_view/src/controller/photo_view_scalestate_controller.dart'
 import 'package:photo_view/src/utils/photo_view_utils.dart';
 import 'package:photo_view/src/core/photo_view_gesture_detector.dart';
 import 'package:photo_view/src/core/photo_view_hit_corners.dart';
+import '../photo_view_scale_state.dart';
 
 const _defaultDecoration = const BoxDecoration(
   color: const Color.fromRGBO(0, 0, 0, 1.0),
@@ -101,17 +105,6 @@ class PhotoViewCoreState extends State<PhotoViewCore>
         HitCornersDetector {
   Matrix4 matrix = Matrix4.identity();
 
-  double _scaleBefore = 0.0;
-
-  @override
-  double get scale => matrix.storage[0];
-
-  @override
-  Offset get position {
-    final t = matrix.getTranslation();
-    return Offset(t.x, t.y);
-  }
-
   final ValueUpdater<Offset> _translationUpdater = ValueUpdater(
     onUpdate: (oldVal, newVal) => newVal - oldVal,
   );
@@ -129,9 +122,24 @@ class PhotoViewCoreState extends State<PhotoViewCore>
 
   ScaleBoundaries cachedScaleBoundaries;
 
+  Timer _doubleTapHoldMaxDelay;
+  int _tapUpCounter = 0;
+
+  bool hasZoomed = false;
+
+  @override
+  double get scale => matrix.storage[0];
+
+  @override
+  Offset get position {
+    final t = matrix.getTranslation();
+    return Offset(t.x, t.y);
+  }
+
   void handleScaleAnimation() {
     setState(() {
       matrix..scale(1 / scale)..scale(_scaleAnimation.value);
+      controller.scale = _scaleAnimation.value;
       scale = _scaleAnimation.value;
     });
   }
@@ -147,8 +155,6 @@ class PhotoViewCoreState extends State<PhotoViewCore>
   void onScaleStart(ScaleStartDetails details) {
     _scaleAnimationController.stop();
     _positionAnimationController.stop();
-
-    _scaleBefore = scale;
 
     _translationUpdater.value = alignFocalPoint(details.focalPoint);
     _scaleUpdater.value = 1.0;
@@ -177,8 +183,8 @@ class PhotoViewCoreState extends State<PhotoViewCore>
 
       if (scale > (scaleBoundaries.maxScale + 1)) {
         updateMultiple(
-            position:
-                clampPosition(position: alignedFocalPoint * details.scale));
+          position: clampPosition(position: alignedFocalPoint),
+        );
 
         return;
       }
@@ -188,8 +194,9 @@ class PhotoViewCoreState extends State<PhotoViewCore>
     updateScaleStateFromNewScale(scale);
 
     updateMultiple(
-        scale: scale,
-        position: clampPosition(position: alignedFocalPoint * details.scale));
+      scale: scale,
+      position: clampPosition(position: alignedFocalPoint),
+    );
 
     _clampMatrix();
   }
@@ -229,8 +236,79 @@ class PhotoViewCoreState extends State<PhotoViewCore>
     }
   }
 
-  void onDoubleTap() {
-    nextScaleState();
+  void handleOnTapUp(TapUpDetails details) {
+    final PhotoViewScaleState scaleState = scaleStateController.scaleState;
+    print('on tap : $scaleState');
+
+    if (_tapUpCounter++ == 1) {
+      final alignedFocalPoint = alignFocalPoint(details.localPosition);
+      print('on double tap : ${scaleStateController.scaleState}');
+
+      if (scaleState == PhotoViewScaleState.zoomedIn ||
+          scaleState == PhotoViewScaleState.zoomedOut) {
+        scaleStateController.scaleState = scaleStateCycle(scaleState);
+        print('after reset : ${scaleStateController.scaleState}');
+
+        Timer(const Duration(milliseconds: 350),
+            () => setScaleStateController(PhotoViewScaleState.initial));
+
+        _resetDoubleTapHold();
+      } else {
+        handleDoubleTap(alignedFocalPoint);
+        print('after handleDoubleTap : ${scaleStateController.scaleState}');
+
+        Timer(const Duration(milliseconds: 350),
+            () => setScaleStateController(PhotoViewScaleState.zoomedIn));
+
+        _resetDoubleTapHold();
+      }
+    }
+  }
+
+  void setScaleStateController(PhotoViewScaleState newState) {
+    scaleStateController.scaleState = newState;
+  }
+
+  void handleDoubleTap(Offset tapPos) {
+    final _scale = scale;
+    final _position = controller.position;
+    final newZoom = _getZoomForScale(scale, 1.5);
+    final scaleComebackRatio = newZoom / _scale;
+
+    animateScale(_scale, newZoom);
+
+    animatePosition(
+      _position,
+      clampPosition(
+        position: -tapPos * scaleComebackRatio,
+        scale: newZoom,
+      ),
+    );
+  }
+
+  double _getZoomForScale(double startZoom, double scale) {
+    final resultZoom = startZoom + math.log(scale) / math.ln2;
+
+    return fitZoomToBounds(resultZoom);
+  }
+
+  double fitZoomToBounds(double zoom) {
+    zoom ??= scale;
+    // Abide to min/max zoom
+    if (scaleBoundaries.maxScale != null) {
+      zoom =
+          (zoom > scaleBoundaries.maxScale) ? scaleBoundaries.maxScale : zoom;
+    }
+    if (scaleBoundaries.minScale != null) {
+      zoom =
+          (zoom < scaleBoundaries.minScale) ? scaleBoundaries.minScale : zoom;
+    }
+    return zoom;
+  }
+
+  void _resetDoubleTapHold() {
+    _doubleTapHoldMaxDelay?.cancel();
+    _tapUpCounter = 0;
   }
 
   void animateScale(double from, double to) {
@@ -274,6 +352,10 @@ class PhotoViewCoreState extends State<PhotoViewCore>
     matrix.scale(cachedScaleBoundaries.initialScale);
   }
 
+  void onScaleState(PhotoViewScaleState scaleState) {
+    print(scaleState);
+  }
+
   void animateOnScaleStateUpdate(double prevScale, double nextScale) {
     animateScale(prevScale, nextScale);
     animatePosition(controller.position, Offset.zero);
@@ -285,10 +367,6 @@ class PhotoViewCoreState extends State<PhotoViewCore>
     _scaleAnimationController.dispose();
     _positionAnimationController.dispose();
     super.dispose();
-  }
-
-  void onTapUp(TapUpDetails details) {
-    widget.onTapUp?.call(context, details, controller.value);
   }
 
   void onTapDown(TapDownDetails details) {
@@ -336,13 +414,12 @@ class PhotoViewCoreState extends State<PhotoViewCore>
                 ),
                 decoration: widget.backgroundDecoration ?? _defaultDecoration,
               ),
-              onDoubleTap: nextScaleState,
               onScaleStart: onScaleStart,
               onScaleUpdate: onScaleUpdate,
               onScaleEnd: onScaleEnd,
               hitDetector: this,
-              onTapUp: widget.onTapUp == null ? null : onTapUp,
               onTapDown: widget.onTapDown == null ? null : onTapDown,
+              onTapUp: handleOnTapUp,
             );
           } else {
             return Container();

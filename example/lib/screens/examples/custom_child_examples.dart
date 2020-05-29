@@ -1,9 +1,35 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view_example/screens/app_bar.dart';
 
-class CustomChildExample extends StatelessWidget {
+class CustomChildExample extends StatefulWidget {
+  @override
+  _CustomChildExampleState createState() => _CustomChildExampleState();
+}
+
+class _CustomChildExampleState extends State<CustomChildExample> {
+  List<Offset> points = [];
+
+  void onTapUp(TapUpDetails details) {
+    print(details.localPosition);
+    points.add(details.localPosition);
+    setState(() {});
+  }
+
+  List<Widget> buildTouchPoints() => points.map(pointToWidget).toList();
+
+  Widget pointToWidget(Offset point) {
+    return Positioned(
+      top: point.dy,
+      left: point.dx,
+      child: Container(
+        width: 10,
+        height: 10,
+        decoration: const BoxDecoration(color: Color(0xFF00FF00)),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -15,47 +41,23 @@ class CustomChildExample extends StatelessWidget {
             showGoBack: true,
           ),
           Expanded(
-            child: Column(
-              children: <Widget>[
-                Container(
-                  padding: const EdgeInsets.all(20.0),
-                  child: const Text(
-                    "Example of usage with something different than a image",
-                    style: const TextStyle(fontSize: 18.0),
-                  ),
-                ),
-                Container(
-                  margin: const EdgeInsets.symmetric(
-                    vertical: 20.0,
-                    horizontal: 20.0,
-                  ),
-                  height: 450.0,
-                  child: ClipRect(
-                    child: PhotoView.customChild(
-                      child: Container(
-                        decoration:
-                            const BoxDecoration(color: Colors.lightGreenAccent),
-                        padding: const EdgeInsets.all(10.0),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: <Widget>[
-                            const Text(
-                              "Hello there, this is a text, that is a svg:",
-                              style: const TextStyle(fontSize: 12.0),
-                              textAlign: TextAlign.center,
-                            ),
-                            SvgPicture.asset(
-                              "assets/firefox.svg",
-                              height: 250.0,
-                            )
-                          ],
-                        ),
-                      ),
-                      initialScale: 1.0,
+            child: Container(
+              child: PhotoView.customChild(
+                minScale: PhotoViewComputedScale.contained * 1.0,
+                maxScale: PhotoViewComputedScale.covered * 2.5,
+                initialScale: PhotoViewComputedScale.contained * 1.0,
+                child: Center(
+                  child: GestureDetector(
+                    onTapUp: onTapUp,
+                    child: Stack(
+                      children: <Widget>[
+                        Image.asset('assets/large-image.jpg'),
+                        ...buildTouchPoints(),
+                      ],
                     ),
                   ),
                 ),
-              ],
+              ),
             ),
           ),
         ],
