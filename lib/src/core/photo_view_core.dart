@@ -374,7 +374,6 @@ class PhotoViewCoreState extends State<PhotoViewCore>
     _scaleAnimationController.removeStatusListener(onAnimationStatus);
     _scaleAnimationController.dispose();
     _positionAnimationController.dispose();
-    _doubleTabTimer.cancel();
     super.dispose();
   }
 
