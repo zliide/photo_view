@@ -238,29 +238,25 @@ class PhotoViewCoreState extends State<PhotoViewCore>
 
   void handleOnTapUp(TapUpDetails details) {
     final PhotoViewScaleState scaleState = scaleStateController.scaleState;
-    print('on tap : $scaleState');
 
     if (_tapUpCounter++ == 1) {
       final alignedFocalPoint = alignFocalPoint(details.localPosition);
-      print('on double tap : ${scaleStateController.scaleState}');
 
       if (scaleState == PhotoViewScaleState.zoomedIn ||
           scaleState == PhotoViewScaleState.zoomedOut) {
         scaleStateController.scaleState = scaleStateCycle(scaleState);
-        print('after reset : ${scaleStateController.scaleState}');
 
         Timer(const Duration(milliseconds: 350),
             () => setScaleStateController(PhotoViewScaleState.initial));
 
-        _resetDoubleTapHold();
+        _resetTapUpCounter();
       } else {
         handleDoubleTap(alignedFocalPoint);
-        print('after handleDoubleTap : ${scaleStateController.scaleState}');
 
         Timer(const Duration(milliseconds: 350),
             () => setScaleStateController(PhotoViewScaleState.zoomedIn));
 
-        _resetDoubleTapHold();
+        _resetTapUpCounter();
       }
     }
   }
@@ -306,8 +302,7 @@ class PhotoViewCoreState extends State<PhotoViewCore>
     return zoom;
   }
 
-  void _resetDoubleTapHold() {
-    _doubleTapHoldMaxDelay?.cancel();
+  void _resetTapUpCounter() {
     _tapUpCounter = 0;
   }
 
