@@ -122,10 +122,8 @@ class PhotoViewCoreState extends State<PhotoViewCore>
 
   ScaleBoundaries cachedScaleBoundaries;
 
-  Timer _doubleTapHoldMaxDelay;
   int _tapUpCounter = 0;
-
-  bool hasZoomed = false;
+  Timer _doubleTabTimer;
 
   @override
   double get scale => matrix.storage[0];
@@ -238,8 +236,10 @@ class PhotoViewCoreState extends State<PhotoViewCore>
 
   void handleOnTapUp(TapUpDetails details) {
     final PhotoViewScaleState scaleState = scaleStateController.scaleState;
+    startDoubleTabTimer();
+    final allowDoubleTab = shouldAllowDoubleTab();
 
-    if (_tapUpCounter++ == 1) {
+    if (_tapUpCounter++ == 1 && allowDoubleTab) {
       final alignedFocalPoint = alignFocalPoint(details.localPosition);
 
       if (scaleState == PhotoViewScaleState.zoomedIn ||
@@ -255,9 +255,22 @@ class PhotoViewCoreState extends State<PhotoViewCore>
 
         Timer(const Duration(milliseconds: 350),
             () => setScaleStateController(PhotoViewScaleState.zoomedIn));
-
         _resetTapUpCounter();
       }
+    }
+  }
+
+  void startDoubleTabTimer() {
+    _doubleTabTimer = Timer(const Duration(milliseconds: 300), () {
+      _resetTapUpCounter();
+    });
+  }
+
+  bool shouldAllowDoubleTab() {
+    if (_doubleTabTimer.isActive) {
+      return true;
+    } else {
+      return false;
     }
   }
 
@@ -361,6 +374,7 @@ class PhotoViewCoreState extends State<PhotoViewCore>
     _scaleAnimationController.removeStatusListener(onAnimationStatus);
     _scaleAnimationController.dispose();
     _positionAnimationController.dispose();
+    _doubleTabTimer.cancel();
     super.dispose();
   }
 
