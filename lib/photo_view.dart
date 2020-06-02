@@ -593,13 +593,26 @@ class _PhotoViewState extends State<PhotoView> {
     return _buildWrapperImage(context, constraints);
   }
 
-  Widget _buildWrapperImage(BuildContext context, BoxConstraints constraints) {
+  Widget _buildWrapperImage(
+    BuildContext context,
+    BoxConstraints constraints, [
+    ImageInfo info,
+  ]) {
     final _computedOuterSize = widget.customSize ?? constraints.biggest;
+
+    var initialScale = widget.initialScale ?? PhotoViewComputedScale.contained;
+
+    if (widget.initialScale == PhotoViewComputedScale.coveredIfTall &&
+        info != null) {
+      initialScale = info.image.width > info.image.height
+          ? PhotoViewComputedScale.contained
+          : PhotoViewComputedScale.covered;
+    }
 
     final scaleBoundaries = ScaleBoundaries(
       widget.minScale ?? 0.0,
       widget.maxScale ?? double.infinity,
-      widget.initialScale ?? PhotoViewComputedScale.contained,
+      initialScale,
       _computedOuterSize,
       _childSize,
     );
