@@ -123,7 +123,7 @@ class PhotoViewCoreState extends State<PhotoViewCore>
   ScaleBoundaries cachedScaleBoundaries;
 
   int _tapUpCounter = 0;
-  Timer _doubleTabTimer;
+  Timer _doubleTapTimer;
 
   @override
   double get scale => matrix.storage[0];
@@ -234,12 +234,13 @@ class PhotoViewCoreState extends State<PhotoViewCore>
     }
   }
 
-  void handleOnTapUp(TapUpDetails details) {
+  void _onTapUp(TapUpDetails details) {
     final PhotoViewScaleState scaleState = scaleStateController.scaleState;
-    startDoubleTabTimer();
-    final allowDoubleTab = shouldAllowDoubleTab();
+    if (!_isWaitingForSecondTap()) {
+      _waitForSecondTap();
+    }
 
-    if (_tapUpCounter++ == 1 && allowDoubleTab) {
+    if (_tapUpCounter++ == 1 && _isWaitingForSecondTap()) {
       final alignedFocalPoint = alignFocalPoint(details.localPosition);
 
       if (scaleState == PhotoViewScaleState.zoomedIn ||
@@ -251,34 +252,29 @@ class PhotoViewCoreState extends State<PhotoViewCore>
 
         _resetTapUpCounter();
       } else {
-        handleDoubleTap(alignedFocalPoint);
+        _onDoubleTap(alignedFocalPoint);
 
         Timer(const Duration(milliseconds: 350),
             () => setScaleStateController(PhotoViewScaleState.zoomedIn));
+
         _resetTapUpCounter();
       }
     }
   }
 
-  void startDoubleTabTimer() {
-    _doubleTabTimer = Timer(const Duration(milliseconds: 300), () {
+  void _waitForSecondTap() {
+    _doubleTapTimer = Timer(const Duration(milliseconds: 300), () {
       _resetTapUpCounter();
     });
   }
 
-  bool shouldAllowDoubleTab() {
-    if (_doubleTabTimer.isActive) {
-      return true;
-    } else {
-      return false;
-    }
-  }
+  bool _isWaitingForSecondTap() => _doubleTapTimer?.isActive ?? false;
 
   void setScaleStateController(PhotoViewScaleState newState) {
     scaleStateController.scaleState = newState;
   }
 
-  void handleDoubleTap(Offset tapPos) {
+  void _onDoubleTap(Offset tapPos) {
     final _scale = scale;
     final _position = controller.position;
     final newZoom = _getZoomForScale(scale, 1.5);
@@ -378,7 +374,9 @@ class PhotoViewCoreState extends State<PhotoViewCore>
   }
 
   void onTapDown(TapDownDetails details) {
-    widget.onTapDown?.call(context, details, controller.value);
+    if (_isWaitingForSecondTap()) {
+      widget.onTapDown?.call(context, details, controller.value);
+    }
   }
 
   @override
@@ -427,7 +425,7 @@ class PhotoViewCoreState extends State<PhotoViewCore>
               onScaleEnd: onScaleEnd,
               hitDetector: this,
               onTapDown: widget.onTapDown == null ? null : onTapDown,
-              onTapUp: handleOnTapUp,
+              onTapUp: _onTapUp,
             );
           } else {
             return Container();
