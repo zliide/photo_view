@@ -579,7 +579,7 @@ class _PhotoViewState extends State<PhotoView> {
         future: _getImage(),
         builder: (BuildContext context, AsyncSnapshot<ImageInfo> info) {
           if (info.hasData) {
-            return _buildWrapperImage(context, constraints);
+            return _buildWrapperImage(context, constraints, info.data);
           } else {
             return _buildLoading();
           }
