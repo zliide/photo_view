@@ -8,6 +8,7 @@ import 'package:vector_math/vector_math_64.dart';
 import 'package:photo_view/photo_view.dart'
     show
         PhotoViewHeroAttributes,
+        PhotoViewImageTapCallback,
         PhotoViewImageTapDownCallback,
         PhotoViewImageTapUpCallback,
         ScaleStateCycle;
@@ -34,6 +35,7 @@ class PhotoViewCore extends StatefulWidget {
     @required this.heroAttributes,
     @required this.enableRotation,
     @required this.enableLRTransition,
+    @required this.onTap,
     @required this.onTapUp,
     @required this.onTapDown,
     @required this.gestureDetectorBehavior,
@@ -54,6 +56,7 @@ class PhotoViewCore extends StatefulWidget {
     @required this.heroAttributes,
     @required this.enableRotation,
     @required this.enableLRTransition,
+    @required this.onTap,
     @required this.onTapUp,
     @required this.onTapDown,
     @required this.gestureDetectorBehavior,
@@ -82,6 +85,7 @@ class PhotoViewCore extends StatefulWidget {
   final ScaleStateCycle scaleStateCycle;
   final Alignment basePosition;
 
+  final PhotoViewImageTapCallback onTap;
   final PhotoViewImageTapUpCallback onTapUp;
   final PhotoViewImageTapDownCallback onTapDown;
 
@@ -234,7 +238,7 @@ class PhotoViewCoreState extends State<PhotoViewCore>
     }
   }
 
-  void _onTapUp(TapUpDetails details) {
+  void _onTapDown(TapDownDetails details) {
     final PhotoViewScaleState scaleState = scaleStateController.scaleState;
     if (!_isWaitingForSecondTap()) {
       _waitForSecondTap();
@@ -259,6 +263,8 @@ class PhotoViewCoreState extends State<PhotoViewCore>
 
         _resetTapUpCounter();
       }
+    } else {
+      widget.onTap?.call();
     }
   }
 
@@ -373,10 +379,12 @@ class PhotoViewCoreState extends State<PhotoViewCore>
     super.dispose();
   }
 
-  void onTapDown(TapDownDetails details) {
-    if (_isWaitingForSecondTap()) {
-      widget.onTapDown?.call(context, details, controller.value);
-    }
+  void onTapUp(TapUpDetails details) {
+    widget.onTapUp?.call(context, details, controller.value);
+  }
+
+  void onTap() {
+    widget.onTap?.call();
   }
 
   @override
@@ -424,8 +432,9 @@ class PhotoViewCoreState extends State<PhotoViewCore>
               onScaleUpdate: onScaleUpdate,
               onScaleEnd: onScaleEnd,
               hitDetector: this,
-              onTapDown: widget.onTapDown == null ? null : onTapDown,
-              onTapUp: _onTapUp,
+              onTapDown: _onTapDown,
+              onTapUp: widget.onTapUp == null ? null : onTapUp,
+              onTap: widget.onTap == null ? null : onTap,
             );
           } else {
             return Container();

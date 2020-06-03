@@ -253,6 +253,7 @@ class PhotoView extends StatefulWidget {
     this.initialScale,
     this.basePosition,
     this.scaleStateCycle,
+    this.onTap,
     this.onTapUp,
     this.onTapDown,
     this.customSize,
@@ -285,6 +286,7 @@ class PhotoView extends StatefulWidget {
     this.initialScale,
     this.basePosition,
     this.scaleStateCycle,
+    this.onTap,
     this.onTapUp,
     this.onTapDown,
     this.customSize,
@@ -365,6 +367,9 @@ class PhotoView extends StatefulWidget {
 
   /// Defines de next [PhotoViewScaleState] given the actual one. Default is [defaultScaleStateCycle]
   final ScaleStateCycle scaleStateCycle;
+
+  /// A pointer that will trigger a tap that has contacted the screen.
+  final PhotoViewImageTapCallback onTap;
 
   /// A pointer that will trigger a tap has stopped contacting the screen at a
   /// particular location.
@@ -560,6 +565,7 @@ class _PhotoViewState extends State<PhotoView> {
       scaleStateCycle: widget.scaleStateCycle ?? defaultScaleStateCycle,
       basePosition: widget.basePosition ?? Alignment.center,
       scaleBoundaries: scaleBoundaries,
+      onTap: widget.onTap,
       onTapUp: widget.onTapUp,
       onTapDown: widget.onTapDown,
       gestureDetectorBehavior: widget.gestureDetectorBehavior,
@@ -629,6 +635,7 @@ class _PhotoViewState extends State<PhotoView> {
       scaleStateController: _scaleStateController,
       scaleStateCycle: widget.scaleStateCycle ?? defaultScaleStateCycle,
       scaleBoundaries: scaleBoundaries,
+      onTap: widget.onTap,
       onTapUp: widget.onTapUp,
       onTapDown: widget.onTapDown,
       gestureDetectorBehavior: widget.gestureDetectorBehavior,
@@ -682,6 +689,9 @@ typedef PhotoViewImageTapUpCallback = Function(
   TapUpDetails details,
   PhotoViewControllerValue controllerValue,
 );
+
+/// A type definition for a callback when the user taps the photoview region
+typedef PhotoViewImageTapCallback = Function();
 
 /// A type definition for a callback when the user taps down the photoview region
 typedef PhotoViewImageTapDownCallback = Function(
