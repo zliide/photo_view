@@ -126,8 +126,8 @@ class PhotoViewCoreState extends State<PhotoViewCore>
 
   ScaleBoundaries cachedScaleBoundaries;
 
-  int _tapUpCounter = 0;
   Timer _doubleTapTimer;
+  bool _shouldPerformDoubleTab = false;
 
   @override
   double get scale => matrix.storage[0];
@@ -238,14 +238,17 @@ class PhotoViewCoreState extends State<PhotoViewCore>
     }
   }
 
-  void _onTapDown(TapDownDetails details) {
+  void _onTapDown(TapDownDetails details) async {
     final PhotoViewScaleState scaleState = scaleStateController.scaleState;
     if (!_isWaitingForSecondTap()) {
       _waitForSecondTap();
+      _shouldPerformDoubleTab = false;
+      return;
     }
 
-    if (_tapUpCounter++ == 1 && _isWaitingForSecondTap()) {
+    if (_isWaitingForSecondTap()) {
       final alignedFocalPoint = alignFocalPoint(details.localPosition);
+      _shouldPerformDoubleTab = true;
 
       if (scaleState == PhotoViewScaleState.zoomedIn ||
           scaleState == PhotoViewScaleState.zoomedOut) {
@@ -253,24 +256,20 @@ class PhotoViewCoreState extends State<PhotoViewCore>
 
         Timer(const Duration(milliseconds: 350),
             () => setScaleStateController(PhotoViewScaleState.initial));
-
-        _resetTapUpCounter();
       } else {
         _onDoubleTap(alignedFocalPoint);
 
         Timer(const Duration(milliseconds: 350),
             () => setScaleStateController(PhotoViewScaleState.zoomedIn));
-
-        _resetTapUpCounter();
       }
-    } else {
-      widget.onTap?.call();
     }
   }
 
   void _waitForSecondTap() {
     _doubleTapTimer = Timer(const Duration(milliseconds: 300), () {
-      _resetTapUpCounter();
+      if (!_shouldPerformDoubleTab) {
+        onTap();
+      }
     });
   }
 
@@ -315,10 +314,6 @@ class PhotoViewCoreState extends State<PhotoViewCore>
           (zoom < scaleBoundaries.minScale) ? scaleBoundaries.minScale : zoom;
     }
     return zoom;
-  }
-
-  void _resetTapUpCounter() {
-    _tapUpCounter = 0;
   }
 
   void animateScale(double from, double to) {
@@ -379,10 +374,6 @@ class PhotoViewCoreState extends State<PhotoViewCore>
     super.dispose();
   }
 
-  void onTapUp(TapUpDetails details) {
-    widget.onTapUp?.call(context, details, controller.value);
-  }
-
   void onTap() {
     widget.onTap?.call();
   }
@@ -433,8 +424,6 @@ class PhotoViewCoreState extends State<PhotoViewCore>
               onScaleEnd: onScaleEnd,
               hitDetector: this,
               onTapDown: _onTapDown,
-              onTapUp: widget.onTapUp == null ? null : onTapUp,
-              onTap: widget.onTap == null ? null : onTap,
             );
           } else {
             return Container();
