@@ -127,7 +127,7 @@ class PhotoViewCoreState extends State<PhotoViewCore>
   ScaleBoundaries cachedScaleBoundaries;
 
   Timer _doubleTapTimer;
-  bool _shouldPerformDoubleTab = false;
+  bool _shouldPerformDoubleTap = false;
 
   @override
   double get scale => matrix.storage[0];
@@ -238,17 +238,14 @@ class PhotoViewCoreState extends State<PhotoViewCore>
     }
   }
 
-  void _onTapDown(TapDownDetails details) async {
+  void _onTapDown(TapDownDetails details) {
     final PhotoViewScaleState scaleState = scaleStateController.scaleState;
     if (!_isWaitingForSecondTap()) {
       _waitForSecondTap();
-      _shouldPerformDoubleTab = false;
-      return;
-    }
-
-    if (_isWaitingForSecondTap()) {
+      _shouldPerformDoubleTap = false;
+    } else {
       final alignedFocalPoint = alignFocalPoint(details.localPosition);
-      _shouldPerformDoubleTab = true;
+      _shouldPerformDoubleTap = true;
 
       if (scaleState == PhotoViewScaleState.zoomedIn ||
           scaleState == PhotoViewScaleState.zoomedOut) {
@@ -267,8 +264,8 @@ class PhotoViewCoreState extends State<PhotoViewCore>
 
   void _waitForSecondTap() {
     _doubleTapTimer = Timer(const Duration(milliseconds: 300), () {
-      if (!_shouldPerformDoubleTab) {
-        onTap();
+      if (!_shouldPerformDoubleTap) {
+        widget.onTap?.call();
       }
     });
   }
@@ -372,10 +369,6 @@ class PhotoViewCoreState extends State<PhotoViewCore>
     _scaleAnimationController.dispose();
     _positionAnimationController.dispose();
     super.dispose();
-  }
-
-  void onTap() {
-    widget.onTap?.call();
   }
 
   @override
