@@ -238,7 +238,7 @@ class PhotoViewCoreState extends State<PhotoViewCore>
     }
   }
 
-  void _onTapDown(TapDownDetails details) {
+  void _onTapUp(TapUpDetails details) {
     final PhotoViewScaleState scaleState = scaleStateController.scaleState;
     if (!_isWaitingForSecondTap()) {
       _waitForSecondTap();
@@ -416,7 +416,7 @@ class PhotoViewCoreState extends State<PhotoViewCore>
               onScaleUpdate: onScaleUpdate,
               onScaleEnd: onScaleEnd,
               hitDetector: this,
-              onTapDown: _onTapDown,
+              onTapUp: _onTapUp,
             );
           } else {
             return Container();
