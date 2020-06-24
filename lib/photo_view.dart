@@ -608,9 +608,25 @@ class _PhotoViewState extends State<PhotoView> {
 
     var initialScale = widget.initialScale ?? PhotoViewComputedScale.contained;
 
-    if (widget.initialScale == PhotoViewComputedScale.coveredIfTall &&
+    bool wihtinTolerance(
+        double toleranceHeight, double imageHeight, double imageWidth) {
+      if (imageHeight >= imageWidth - toleranceHeight &&
+          imageHeight <= imageWidth + toleranceHeight) {
+        return true;
+      } else {
+        return false;
+      }
+    }
+
+    if (widget.initialScale == PhotoViewComputedScale.coveredIfTallOrSquared &&
         info != null) {
-      initialScale = info.image.width > info.image.height
+      final imageWidth = info.image.width.toDouble();
+      final imageHeight = info.image.height.toDouble();
+
+      final toleranceHeight = 0.05 * imageHeight;
+
+      initialScale = imageWidth > imageHeight ||
+              wihtinTolerance(toleranceHeight, imageHeight, imageWidth)
           ? PhotoViewComputedScale.contained
           : PhotoViewComputedScale.covered;
     }
