@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
 import 'package:photo_view_example/screens/app_bar.dart';
@@ -172,28 +171,12 @@ class _GalleryPhotoViewWrapperState extends State<GalleryPhotoViewWrapper> {
 
   PhotoViewGalleryPageOptions _buildItem(BuildContext context, int index) {
     final GalleryExampleItem item = widget.galleryItems[index];
-    return item.isSvg
-        ? PhotoViewGalleryPageOptions.customChild(
-            child: Container(
-              width: 300,
-              height: 300,
-              child: SvgPicture.asset(
-                item.resource,
-                height: 200.0,
-              ),
-            ),
-            childSize: const Size(300, 300),
-            initialScale: PhotoViewComputedScale.contained,
-            minScale: PhotoViewComputedScale.contained * (0.5 + index / 10),
-            maxScale: PhotoViewComputedScale.covered * 1.1,
-            heroAttributes: PhotoViewHeroAttributes(tag: item.id),
-          )
-        : PhotoViewGalleryPageOptions(
-            imageProvider: AssetImage(item.resource),
-            initialScale: PhotoViewComputedScale.contained,
-            minScale: PhotoViewComputedScale.contained * (0.5 + index / 10),
-            maxScale: PhotoViewComputedScale.covered * 1.1,
-            heroAttributes: PhotoViewHeroAttributes(tag: item.id),
-          );
+    return PhotoViewGalleryPageOptions(
+      imageProvider: AssetImage(item.resource),
+      initialScale: PhotoViewComputedScale.contained,
+      minScale: PhotoViewComputedScale.contained * (0.5 + index / 10),
+      maxScale: PhotoViewComputedScale.covered * 1.1,
+      heroAttributes: PhotoViewHeroAttributes(tag: item.id),
+    );
   }
 }

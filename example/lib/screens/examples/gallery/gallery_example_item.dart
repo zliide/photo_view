@@ -1,11 +1,10 @@
 import 'package:flutter/widgets.dart';
 
 class GalleryExampleItem {
-  GalleryExampleItem({this.id, this.resource, this.isSvg = false});
+  GalleryExampleItem({this.id, this.resource});
 
   final String id;
   final String resource;
-  final bool isSvg;
 }
 
 class GalleryExampleItemThumbnail extends StatelessWidget {
@@ -37,7 +36,6 @@ List<GalleryExampleItem> galleryItems = <GalleryExampleItem>[
     id: "tag1",
     resource: "assets/gallery1.jpg",
   ),
-  GalleryExampleItem(id: "tag2", resource: "assets/firefox.svg", isSvg: true),
   GalleryExampleItem(
     id: "tag3",
     resource: "assets/gallery2.jpg",
