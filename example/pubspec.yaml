@@ -1,6 +1,13 @@
 name: photo_view_example
 description: Example of how to use Photo View
 
+# The following line prevents the package from being accidentally published to
+# pub.dev using `pub publish`. This is preferred for private packages.
+publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+
+environment:
+  sdk: ">=2.7.0 <3.0.0"
+
 dependencies:
   flutter_svg:
   photo_view:
