@@ -608,27 +608,15 @@ class _PhotoViewState extends State<PhotoView> {
 
     var initialScale = widget.initialScale ?? PhotoViewComputedScale.contained;
 
-    bool wihtinTolerance(
-        double toleranceHeight, double imageHeight, double imageWidth) {
-      if (imageHeight >= imageWidth - toleranceHeight &&
-          imageHeight <= imageWidth + toleranceHeight) {
-        return true;
-      } else {
-        return false;
-      }
-    }
-
-    if (widget.initialScale == PhotoViewComputedScale.coveredIfTallOrSquared &&
-        info != null) {
+    if (widget.initialScale == PhotoViewComputedScale.auto && info != null) {
       final imageWidth = info.image.width.toDouble();
       final imageHeight = info.image.height.toDouble();
+      final imageAspectRatio = imageWidth / imageHeight;
 
-      final toleranceHeight = 0.05 * imageHeight;
-
-      initialScale = imageWidth > imageHeight ||
-              wihtinTolerance(toleranceHeight, imageHeight, imageWidth)
-          ? PhotoViewComputedScale.contained
-          : PhotoViewComputedScale.covered;
+      initialScale =
+          (imageAspectRatio < 1 == _computedOuterSize.aspectRatio < 1)
+              ? PhotoViewComputedScale.covered
+              : PhotoViewComputedScale.contained;
     }
 
     final scaleBoundaries = ScaleBoundaries(
