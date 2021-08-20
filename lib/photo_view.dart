@@ -654,7 +654,7 @@ class _PhotoViewState extends State<PhotoView> {
     }
 
     return PhotoViewDefaultLoading(
-      event: _imageChunkEvent!,
+      event: _imageChunkEvent,
     );
   }
 
