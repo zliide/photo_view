@@ -210,10 +210,10 @@ class ExampleButtonNode extends StatelessWidget {
                 margin: const EdgeInsets.only(
                   top: 10.0,
                 ),
-                child: RaisedButton(
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(primary: Colors.amber),
                   onPressed: onPressed,
                   child: const Text("Open example"),
-                  color: Colors.amber,
                 ))
           ],
         ));

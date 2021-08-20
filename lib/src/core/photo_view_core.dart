@@ -20,64 +20,60 @@ import 'package:photo_view/src/core/photo_view_gesture_detector.dart';
 import 'package:photo_view/src/core/photo_view_hit_corners.dart';
 import '../photo_view_scale_state.dart';
 
-const _defaultDecoration = const BoxDecoration(
-  color: const Color.fromRGBO(0, 0, 0, 1.0),
-);
-
 /// Internal widget in which controls all animations lifecycle, core responses
 /// to user gestures, updates to  the controller state and mounts the entire PhotoView Layout
 class PhotoViewCore extends StatefulWidget {
   const PhotoViewCore({
-    Key key,
-    @required this.imageProvider,
-    @required this.backgroundDecoration,
-    @required this.gaplessPlayback,
-    @required this.heroAttributes,
-    @required this.enableRotation,
-    @required this.enableLRTransition,
-    @required this.onTap,
-    @required this.onTapUp,
-    @required this.onTapDown,
-    @required this.gestureDetectorBehavior,
-    @required this.controller,
-    @required this.scaleBoundaries,
-    @required this.scaleStateCycle,
-    @required this.scaleStateController,
-    @required this.basePosition,
-    @required this.tightMode,
-    @required this.filterQuality,
+    Key? key,
+    required this.imageProvider,
+    required this.backgroundDecoration,
+    required this.gaplessPlayback,
+    required this.heroAttributes,
+    required this.enableRotation,
+    required this.enableLRTransition,
+    required this.onTap,
+    required this.onTapUp,
+    required this.onTapDown,
+    required this.gestureDetectorBehavior,
+    required this.controller,
+    required this.scaleBoundaries,
+    required this.scaleStateCycle,
+    required this.scaleStateController,
+    required this.basePosition,
+    required this.tightMode,
+    required this.filterQuality,
   })  : customChild = null,
         super(key: key);
 
   const PhotoViewCore.customChild({
-    Key key,
-    @required this.customChild,
-    @required this.backgroundDecoration,
-    @required this.heroAttributes,
-    @required this.enableRotation,
-    @required this.enableLRTransition,
-    @required this.onTap,
-    @required this.onTapUp,
-    @required this.onTapDown,
-    @required this.gestureDetectorBehavior,
-    @required this.controller,
-    @required this.scaleBoundaries,
-    @required this.scaleStateCycle,
-    @required this.scaleStateController,
-    @required this.basePosition,
-    @required this.tightMode,
-    @required this.filterQuality,
+    Key? key,
+    required this.customChild,
+    required this.backgroundDecoration,
+    this.heroAttributes,
+    required this.enableRotation,
+    required this.enableLRTransition,
+    this.onTap,
+    this.onTapUp,
+    this.onTapDown,
+    this.gestureDetectorBehavior,
+    required this.controller,
+    required this.scaleBoundaries,
+    required this.scaleStateCycle,
+    required this.scaleStateController,
+    required this.basePosition,
+    required this.tightMode,
+    required this.filterQuality,
   })  : imageProvider = null,
         gaplessPlayback = false,
         super(key: key);
 
   final Decoration backgroundDecoration;
-  final ImageProvider imageProvider;
-  final bool gaplessPlayback;
-  final PhotoViewHeroAttributes heroAttributes;
+  final ImageProvider? imageProvider;
+  final bool? gaplessPlayback;
+  final PhotoViewHeroAttributes? heroAttributes;
   final bool enableRotation;
   final bool enableLRTransition;
-  final Widget customChild;
+  final Widget? customChild;
 
   final PhotoViewControllerBase controller;
   final PhotoViewScaleStateController scaleStateController;
@@ -85,11 +81,11 @@ class PhotoViewCore extends StatefulWidget {
   final ScaleStateCycle scaleStateCycle;
   final Alignment basePosition;
 
-  final PhotoViewImageTapCallback onTap;
-  final PhotoViewImageTapUpCallback onTapUp;
-  final PhotoViewImageTapDownCallback onTapDown;
+  final PhotoViewImageTapCallback? onTap;
+  final PhotoViewImageTapUpCallback? onTapUp;
+  final PhotoViewImageTapDownCallback? onTapDown;
 
-  final HitTestBehavior gestureDetectorBehavior;
+  final HitTestBehavior? gestureDetectorBehavior;
   final bool tightMode;
 
   final FilterQuality filterQuality;
@@ -116,17 +112,17 @@ class PhotoViewCoreState extends State<PhotoViewCore>
     onUpdate: (oldVal, newVal) => newVal / oldVal,
   );
 
-  AnimationController _scaleAnimationController;
-  Animation<double> _scaleAnimation;
+  late AnimationController _scaleAnimationController;
+  Animation<double>? _scaleAnimation;
 
-  AnimationController _positionAnimationController;
-  Animation<Offset> _positionAnimation;
+  late AnimationController _positionAnimationController;
+  Animation<Offset>? _positionAnimation;
 
-  PhotoViewHeroAttributes get heroAttributes => widget.heroAttributes;
+  PhotoViewHeroAttributes? get heroAttributes => widget.heroAttributes;
 
-  ScaleBoundaries cachedScaleBoundaries;
+  late ScaleBoundaries cachedScaleBoundaries = widget.scaleBoundaries;
 
-  Timer _doubleTapTimer;
+  Timer? _doubleTapTimer;
   bool _shouldPerformDoubleTap = false;
 
   @override
@@ -140,17 +136,17 @@ class PhotoViewCoreState extends State<PhotoViewCore>
 
   void handleScaleAnimation() {
     setState(() {
-      matrix..scale(1 / scale)..scale(_scaleAnimation.value);
-      controller.scale = _scaleAnimation.value;
-      scale = _scaleAnimation.value;
+      matrix..scale(1 / scale)..scale(_scaleAnimation!.value);
+      controller.scale = _scaleAnimation!.value;
+      scale = _scaleAnimation!.value;
     });
   }
 
   void handlePositionAnimate() {
     setState(() {
       matrix.setTranslation(Vector3(
-          _positionAnimation.value.dx, _positionAnimation.value.dy, 0.0));
-      controller.position = _positionAnimation.value;
+          _positionAnimation!.value.dx, _positionAnimation!.value.dy, 0.0));
+      controller.position = _positionAnimation!.value;
     });
   }
 
@@ -175,7 +171,10 @@ class PhotoViewCoreState extends State<PhotoViewCore>
       matrix = translationDeltaMatrix * matrix;
     }
 
-    final RenderBox renderBox = context.findRenderObject();
+    final renderBox = context.findRenderObject();
+    if (renderBox is! RenderBox) {
+      return;
+    }
     final focalPoint = renderBox.globalToLocal(alignedFocalPoint);
 
     // handle matrix scaling
@@ -299,18 +298,10 @@ class PhotoViewCoreState extends State<PhotoViewCore>
     return fitZoomToBounds(resultZoom);
   }
 
-  double fitZoomToBounds(double zoom) {
+  double fitZoomToBounds(double? zoom) {
     zoom ??= scale;
     // Abide to min/max zoom
-    if (scaleBoundaries.maxScale != null) {
-      zoom =
-          (zoom > scaleBoundaries.maxScale) ? scaleBoundaries.maxScale : zoom;
-    }
-    if (scaleBoundaries.minScale != null) {
-      zoom =
-          (zoom < scaleBoundaries.minScale) ? scaleBoundaries.minScale : zoom;
-    }
-    return zoom;
+    return (zoom < scaleBoundaries.minScale) ? scaleBoundaries.minScale : zoom;
   }
 
   void animateScale(double from, double to) {
@@ -410,7 +401,7 @@ class PhotoViewCoreState extends State<PhotoViewCore>
                     alignment: basePosition,
                   ),
                 ),
-                decoration: widget.backgroundDecoration ?? _defaultDecoration,
+                decoration: widget.backgroundDecoration,
               ),
               onScaleStart: onScaleStart,
               onScaleUpdate: onScaleUpdate,
@@ -427,11 +418,11 @@ class PhotoViewCoreState extends State<PhotoViewCore>
   Widget _buildHero() {
     return heroAttributes != null
         ? Hero(
-            tag: heroAttributes.tag,
-            createRectTween: heroAttributes.createRectTween,
-            flightShuttleBuilder: heroAttributes.flightShuttleBuilder,
-            placeholderBuilder: heroAttributes.placeholderBuilder,
-            transitionOnUserGestures: heroAttributes.transitionOnUserGestures,
+            tag: heroAttributes!.tag,
+            createRectTween: heroAttributes!.createRectTween,
+            flightShuttleBuilder: heroAttributes!.flightShuttleBuilder,
+            placeholderBuilder: heroAttributes!.placeholderBuilder,
+            transitionOnUserGestures: heroAttributes!.transitionOnUserGestures,
             child: _buildChild(),
           )
         : _buildChild();
@@ -439,9 +430,9 @@ class PhotoViewCoreState extends State<PhotoViewCore>
 
   Widget _buildChild() {
     return widget.hasCustomChild
-        ? widget.customChild
+        ? widget.customChild!
         : Image(
-            image: widget.imageProvider,
+            image: widget.imageProvider!,
             gaplessPlayback: widget.gaplessPlayback ?? false,
             filterQuality: widget.filterQuality,
             width: scaleBoundaries.childSize.width * 1.00000000001,

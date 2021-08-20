@@ -22,7 +22,7 @@ double getScaleForScaleState(
     case PhotoViewScaleState.originalSize:
       return _clampSize(1.0, scaleBoundaries);
     default:
-      return null;
+      return 0;
   }
 }
 

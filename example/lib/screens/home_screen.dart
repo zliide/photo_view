@@ -110,8 +110,10 @@ class HomeScreen extends StatelessWidget {
   }
 
   Widget _buildItem(context, {String text, Function onPressed}) {
-    return FlatButton(
-      padding: const EdgeInsets.symmetric(vertical: 25.0, horizontal: 20.0),
+    return TextButton(
+      style: TextButton.styleFrom(
+        padding: const EdgeInsets.symmetric(vertical: 25.0, horizontal: 20.0),
+      ),
       child: Text(
         text,
         style: const TextStyle(fontSize: 18.0, fontWeight: FontWeight.w700),

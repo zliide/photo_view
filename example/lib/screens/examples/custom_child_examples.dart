@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:photo_view/photo_view.dart';
 import 'package:photo_view_example/screens/app_bar.dart';
 
 class CustomChildExample extends StatefulWidget {
@@ -41,24 +40,7 @@ class _CustomChildExampleState extends State<CustomChildExample> {
             showGoBack: true,
           ),
           Expanded(
-            child: Container(
-              child: PhotoView.customChild(
-                minScale: PhotoViewComputedScale.contained * 1.0,
-                maxScale: PhotoViewComputedScale.covered * 2.5,
-                initialScale: PhotoViewComputedScale.contained * 1.0,
-                child: Center(
-                  child: GestureDetector(
-                    onTapUp: onTapUp,
-                    child: Stack(
-                      children: <Widget>[
-                        Image.asset('assets/large-image.jpg'),
-                        ...buildTouchPoints(),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
+            child: Container(),
           ),
         ],
       ),

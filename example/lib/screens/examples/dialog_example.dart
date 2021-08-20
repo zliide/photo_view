@@ -90,19 +90,19 @@ class _DialogExampleInnerState extends State<DialogExampleInner> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
               Container(
-                decoration: BoxDecoration(color: Colors.red),
+                decoration: const BoxDecoration(color: Colors.red),
               ),
-              RaisedButton(
+              ElevatedButton(
                 child: const Text("Dialog"),
                 onPressed: openDialog(context),
               ),
               const Divider(),
-              RaisedButton(
+              ElevatedButton(
                 child: const Text("Bottom sheet"),
                 onPressed: openBottomSheet(context),
               ),
               const Divider(),
-              RaisedButton(
+              ElevatedButton(
                 child: const Text("Bottom sheet tight mode"),
                 onPressed: openBottomSheetModal(context),
               ),

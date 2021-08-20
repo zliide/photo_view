@@ -14,15 +14,15 @@ class PhotoViewDefaultError extends StatelessWidget {
 }
 
 class PhotoViewDefaultLoading extends StatelessWidget {
-  const PhotoViewDefaultLoading({Key key, this.event}) : super(key: key);
+  const PhotoViewDefaultLoading({Key? key, this.event}) : super(key: key);
 
-  final ImageChunkEvent event;
+  final ImageChunkEvent? event;
 
   @override
   Widget build(BuildContext context) {
-    final value = event == null
+    final value = event == null || event?.expectedTotalBytes != null
         ? 0.0
-        : event.cumulativeBytesLoaded / event.expectedTotalBytes;
+        : event!.cumulativeBytesLoaded / event!.expectedTotalBytes!;
     return Center(
       child: Container(
         width: 20.0,

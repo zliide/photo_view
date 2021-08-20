@@ -1,10 +1,10 @@
 typedef _OnUpdate<T> = T Function(T oldValue, T newValue);
 
 class ValueUpdater<T> {
-  ValueUpdater({this.onUpdate});
+  ValueUpdater({required this.onUpdate});
 
   final _OnUpdate<T> onUpdate;
-  T value;
+  late T value;
 
   T update(T newValue) {
     final updated = onUpdate(value, newValue);

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:photo_view/photo_view.dart';
 
 import '../app_bar.dart';
 
@@ -54,25 +53,6 @@ class _PhotoViewContainerState extends State<PhotoViewContainer> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      child: PhotoView.customChild(
-        enableRotation: false,
-        child: Center(
-          child: GestureDetector(
-            onTapUp: onTapUp,
-            child: Stack(
-              children: <Widget>[
-                Container(
-                  height: 500,
-                  width: 1000,
-                  color: Colors.amber,
-                ),
-                ...buildTouchPoints(),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
+    return Container();
   }
 }
