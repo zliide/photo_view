@@ -400,6 +400,7 @@ class _PhotoViewState extends State<PhotoView> {
   bool? _loading;
   bool? _loadFailed;
   ImageChunkEvent? _imageChunkEvent;
+  Completer<ImageInfo>? _completer;
 
   late bool _controlledController;
   late PhotoViewControllerBase _controller;
@@ -408,7 +409,12 @@ class _PhotoViewState extends State<PhotoView> {
   late PhotoViewScaleStateController _scaleStateController;
 
   Future<ImageInfo> _getImage() {
+    final nullSafeCompleter = _completer;
+    if (nullSafeCompleter != null) {
+      return nullSafeCompleter.future;
+    }
     final completer = Completer<ImageInfo>();
+    _completer = completer;
     final ImageStream stream = widget.imageProvider!.resolve(
       const ImageConfiguration(),
     );
@@ -483,10 +489,9 @@ class _PhotoViewState extends State<PhotoView> {
 
   @override
   void didUpdateWidget(PhotoView oldWidget) {
+    _completer = null;
     if (oldWidget.childSize != widget.childSize && widget.childSize != null) {
-      setState(() {
-        _childSize = widget.childSize;
-      });
+      _childSize = widget.childSize;
     }
     if (widget.controller == null) {
       if (!_controlledController) {
